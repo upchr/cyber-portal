@@ -1,0 +1,196 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --cyber-cyan: #00fff9;
+  --cyber-magenta: #ff00ff;
+  --cyber-purple: #b400ff;
+  --cyber-yellow: #f0ff00;
+  --cyber-red: #ff0040;
+  --cyber-green: #00ff88;
+  --cyber-blue: #0088ff;
+  --cyber-dark: #0a0a12;
+  --cyber-darker: #050508;
+  --cyber-gray: #1a1a2e;
+}
+
+body {
+  font-family: 'Courier New', 'Monaco', monospace;
+  background: var(--cyber-darker);
+  color: var(--cyber-cyan);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 扫描线效果 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1) 0px,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  z-index: 9999;
+}
+
+/* 网格背景 */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 255, 249, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 249, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+#app {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* 霓虹发光效果 */
+.neon-text {
+  text-shadow: 
+    0 0 5px var(--cyber-cyan),
+    0 0 10px var(--cyber-cyan),
+    0 0 20px var(--cyber-cyan),
+    0 0 40px var(--cyber-cyan);
+}
+
+.neon-box {
+  border: 1px solid var(--cyber-cyan);
+  box-shadow: 
+    0 0 5px var(--cyber-cyan),
+    0 0 10px rgba(0, 255, 249, 0.3),
+    inset 0 0 20px rgba(0, 255, 249, 0.1);
+}
+
+/* Glitch 效果 */
+@keyframes glitch {
+  0%, 90%, 100% {
+    transform: translate(0);
+  }
+  92% {
+    transform: translate(-2px, 1px);
+  }
+  94% {
+    transform: translate(2px, -1px);
+  }
+  96% {
+    transform: translate(-1px, -2px);
+  }
+  98% {
+    transform: translate(1px, 2px);
+  }
+}
+
+.glitch {
+  animation: glitch 3s infinite;
+}
+
+/* 扫描动画 */
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 浮动动画 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* 渐变边框 */
+.gradient-border {
+  position: relative;
+  background: var(--cyber-dark);
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--cyber-cyan), var(--cyber-magenta), var(--cyber-purple), var(--cyber-cyan));
+  background-size: 400% 400%;
+  z-index: -1;
+  animation: gradient-rotate 5s linear infinite;
+  border-radius: inherit;
+}
+
+@keyframes gradient-rotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 打字机效果 */
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink {
+  50% { border-color: transparent }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cyber-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cyber-cyan);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cyber-magenta);
+}
