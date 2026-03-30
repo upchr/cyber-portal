@@ -1,27 +1,30 @@
 <template>
   <div class="stats-card neon-box">
-    <h3 class="card-title">// SYSTEM_STATUS</h3>
+    <h3 class="card-title">// CLIENT_INFO</h3>
     <div class="stats-grid">
       <div class="stat-item">
-        <div class="stat-label">CPU_LOAD</div>
-        <div class="stat-bar">
-          <div class="stat-fill" :style="{ width: cpuUsage + '%' }"></div>
-        </div>
-        <div class="stat-value">{{ cpuUsage.toFixed(1) }}%</div>
+        <div class="stat-label">BROWSER</div>
+        <div class="stat-value">{{ browser }}</div>
       </div>
       <div class="stat-item">
-        <div class="stat-label">MEM_USAGE</div>
-        <div class="stat-bar">
-          <div class="stat-fill mem" :style="{ width: memUsage + '%' }"></div>
-        </div>
-        <div class="stat-value">{{ memUsage.toFixed(1) }}%</div>
+        <div class="stat-label">PLATFORM</div>
+        <div class="stat-value">{{ platform }}</div>
       </div>
       <div class="stat-item">
-        <div class="stat-label">NET_TRAFFIC</div>
-        <div class="stat-bar">
-          <div class="stat-fill net" :style="{ width: netUsage + '%' }"></div>
-        </div>
-        <div class="stat-value">{{ netTraffic }} KB/s</div>
+        <div class="stat-label">SCREEN</div>
+        <div class="stat-value">{{ screen }}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">LANGUAGE</div>
+        <div class="stat-value">{{ language }}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">TIMEZONE</div>
+        <div class="stat-value">{{ timezone }}</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">ONLINE</div>
+        <div class="stat-value online">{{ online ? 'CONNECTED' : 'OFFLINE' }}</div>
       </div>
     </div>
     <div class="wave-container">
@@ -33,22 +36,35 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const cpuUsage = ref(0)
-const memUsage = ref(0)
-const netUsage = ref(0)
-const netTraffic = ref(0)
-const waveCanvas = ref(null)
+const browser = ref('Unknown')
+const platform = ref('Unknown')
+const screen = ref('0x0')
+const language = ref('en')
+const timezone = ref('UTC')
+const online = ref(true)
 
-let timer = null
 let waveCtx = null
 let waveOffset = 0
+const waveCanvas = ref(null)
 
-const updateStats = () => {
-  // 模拟数据
-  cpuUsage.value = 30 + Math.random() * 40
-  memUsage.value = 50 + Math.random() * 30
-  netUsage.value = Math.random() * 100
-  netTraffic.value = Math.floor(Math.random() * 1000)
+const detectBrowser = () => {
+  const ua = navigator.userAgent
+  if (ua.includes('Firefox')) return 'Firefox'
+  if (ua.includes('Edg/')) return 'Edge'
+  if (ua.includes('Chrome')) return 'Chrome'
+  if (ua.includes('Safari')) return 'Safari'
+  if (ua.includes('Opera') || ua.includes('OPR')) return 'Opera'
+  return 'Unknown'
+}
+
+const detectPlatform = () => {
+  const platform = navigator.platform || navigator.userAgentData?.platform || 'Unknown'
+  if (platform.includes('Win')) return 'Windows'
+  if (platform.includes('Mac')) return 'macOS'
+  if (platform.includes('Linux')) return 'Linux'
+  if (platform.includes('iPhone') || platform.includes('iPad')) return 'iOS'
+  if (platform.includes('Android')) return 'Android'
+  return platform
 }
 
 const drawWave = () => {
@@ -60,7 +76,6 @@ const drawWave = () => {
   
   waveCtx.clearRect(0, 0, width, height)
   
-  // 绘制多条波形
   const waves = [
     { color: 'rgba(0, 255, 249, 0.3)', amplitude: 20, frequency: 0.02, speed: 0.05 },
     { color: 'rgba(255, 0, 255, 0.2)', amplitude: 15, frequency: 0.03, speed: 0.03 },
@@ -92,8 +107,15 @@ const drawWave = () => {
 }
 
 onMounted(() => {
-  updateStats()
-  timer = setInterval(updateStats, 2000)
+  browser.value = detectBrowser()
+  platform.value = detectPlatform()
+  screen.value = `${window.screen.width}x${window.screen.height}`
+  language.value = navigator.language || 'en'
+  timezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  online.value = navigator.onLine
+  
+  window.addEventListener('online', () => online.value = true)
+  window.addEventListener('offline', () => online.value = false)
   
   const canvas = waveCanvas.value
   canvas.width = canvas.offsetWidth * 2
@@ -104,7 +126,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (timer) clearInterval(timer)
+  window.removeEventListener('online', () => {})
+  window.removeEventListener('offline', () => {})
 })
 </script>
 
@@ -122,53 +145,34 @@ onUnmounted(() => {
 }
 
 .stats-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .stat-item {
-  display: grid;
-  grid-template-columns: 100px 1fr 60px;
-  align-items: center;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  background: rgba(0, 255, 249, 0.03);
+  border: 1px solid rgba(0, 255, 249, 0.1);
 }
 
 .stat-label {
-  font-size: 0.7rem;
-  color: var(--cyber-cyan);
-  opacity: 0.7;
-}
-
-.stat-bar {
-  height: 8px;
-  background: rgba(0, 255, 249, 0.1);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.stat-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--cyber-cyan), var(--cyber-green));
-  border-radius: 4px;
-  transition: width 0.5s ease;
-  box-shadow: 0 0 10px var(--cyber-cyan);
-}
-
-.stat-fill.mem {
-  background: linear-gradient(90deg, var(--cyber-magenta), var(--cyber-purple));
-  box-shadow: 0 0 10px var(--cyber-magenta);
-}
-
-.stat-fill.net {
-  background: linear-gradient(90deg, var(--cyber-yellow), var(--cyber-green));
-  box-shadow: 0 0 10px var(--cyber-yellow);
+  font-size: 0.65rem;
+  color: var(--cyber-magenta);
+  opacity: 0.8;
 }
 
 .stat-value {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--cyber-cyan);
+  font-weight: 500;
+}
+
+.stat-value.online {
   color: var(--cyber-green);
-  text-align: right;
 }
 
 .wave-container {

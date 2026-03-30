@@ -1,37 +1,46 @@
 <template>
   <div class="github-card neon-box">
-    <h3 class="card-title">// GITHUB_STATUS</h3>
-    <div class="github-content">
+    <h3 class="card-title">// GITHUB_PROFILE</h3>
+    <div v-if="loading" class="loading">
+      <span class="loading-text">LOADING...</span>
+    </div>
+    <div v-else-if="error" class="error">
+      <span>{{ error }}</span>
+    </div>
+    <div v-else class="github-content">
       <div class="github-header">
-        <div class="avatar-container">
-          <div class="avatar-placeholder">🐙</div>
+        <a :href="profile.html_url" target="_blank" class="avatar-link">
+          <img :src="profile.avatar_url" :alt="profile.login" class="avatar" />
           <div class="status-dot"></div>
-        </div>
+        </a>
         <div class="user-info">
-          <span class="username">@developer</span>
-          <span class="status">ACTIVE</span>
+          <a :href="profile.html_url" target="_blank" class="username">@{{ profile.login }}</a>
+          <span class="name">{{ profile.name || 'Developer' }}</span>
         </div>
       </div>
       <div class="stats">
         <div class="stat">
-          <span class="stat-num">{{ repos }}</span>
+          <span class="stat-num">{{ profile.public_repos || 0 }}</span>
           <span class="stat-label">REPOS</span>
         </div>
         <div class="stat">
-          <span class="stat-num">{{ followers }}</span>
+          <span class="stat-num">{{ profile.followers || 0 }}</span>
           <span class="stat-label">FOLLOWERS</span>
         </div>
         <div class="stat">
-          <span class="stat-num">{{ contributions }}</span>
-          <span class="stat-label">COMMITS</span>
+          <span class="stat-num">{{ profile.following || 0 }}</span>
+          <span class="stat-label">FOLLOWING</span>
         </div>
       </div>
       <div class="contribution-graph">
-        <div v-for="(row, i) in contributionGrid" :key="i" class="grid-row">
-          <div v-for="(cell, j) in row" 
-               :key="j" 
-               :class="['grid-cell', cell]"
-               :style="{ animationDelay: `${(i * 7 + j) * 0.02}s` }">
+        <div class="graph-title">CONTRIBUTION_ACTIVITY</div>
+        <div class="grid-container">
+          <div v-for="(row, i) in contributionGrid" :key="i" class="grid-row">
+            <div v-for="(cell, j) in row" 
+                 :key="j" 
+                 :class="['grid-cell', cell]"
+                 :style="{ animationDelay: `${(i * 7 + j) * 0.01}s` }">
+            </div>
           </div>
         </div>
       </div>
@@ -42,18 +51,20 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const repos = ref(42)
-const followers = ref(128)
-const contributions = ref(1024)
+// 配置：修改这里为你的 GitHub 用户名
+const GITHUB_USERNAME = 'upchr'
 
+const profile = ref({})
 const contributionGrid = ref([])
+const loading = ref(true)
+const error = ref(null)
 
-onMounted(() => {
-  // 生成贡献图
+const generateContributionGrid = () => {
+  // 生成随机贡献图（实际 GitHub API 需要认证才能获取真实数据）
   const grid = []
   for (let i = 0; i < 7; i++) {
     const row = []
-    for (let j = 0; j < 14; j++) {
+    for (let j = 0; j < 20; j++) {
       const rand = Math.random()
       if (rand < 0.3) row.push('level-0')
       else if (rand < 0.5) row.push('level-1')
@@ -64,11 +75,22 @@ onMounted(() => {
     grid.push(row)
   }
   contributionGrid.value = grid
-  
-  // 动态数字
-  const interval = setInterval(() => {
-    contributions.value += Math.floor(Math.random() * 3)
-  }, 5000)
+}
+
+onMounted(async () => {
+  try {
+    const response = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}`)
+    if (!response.ok) {
+      throw new Error('Failed to fetch profile')
+    }
+    profile.value = await response.json()
+    generateContributionGrid()
+  } catch (e) {
+    error.value = '无法加载 GitHub 数据'
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 
@@ -85,6 +107,20 @@ onMounted(() => {
   letter-spacing: 2px;
 }
 
+.loading, .error {
+  padding: 40px;
+  text-align: center;
+  color: var(--cyber-cyan);
+}
+
+.loading-text {
+  animation: pulse 1s infinite;
+}
+
+.error {
+  color: var(--cyber-red);
+}
+
 .github-content {
   display: flex;
   flex-direction: column;
@@ -97,27 +133,31 @@ onMounted(() => {
   gap: 15px;
 }
 
-.avatar-container {
+.avatar-link {
   position: relative;
+  text-decoration: none;
 }
 
-.avatar-placeholder {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(135deg, var(--cyber-cyan), var(--cyber-purple));
+.avatar {
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
+  border: 2px solid var(--cyber-cyan);
+  box-shadow: 0 0 15px rgba(0, 255, 249, 0.3);
+  transition: all 0.3s;
+}
+
+.avatar:hover {
+  box-shadow: 0 0 25px rgba(0, 255, 249, 0.5);
+  transform: scale(1.05);
 }
 
 .status-dot {
   position: absolute;
   bottom: 2px;
   right: 2px;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background: var(--cyber-green);
   border-radius: 50%;
   border: 2px solid var(--cyber-dark);
@@ -127,18 +167,24 @@ onMounted(() => {
 .user-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 .username {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--cyber-cyan);
+  text-decoration: none;
+  transition: all 0.3s;
 }
 
-.status {
-  font-size: 0.7rem;
-  color: var(--cyber-green);
-  letter-spacing: 2px;
+.username:hover {
+  color: var(--cyber-magenta);
+  text-shadow: 0 0 10px var(--cyber-magenta);
+}
+
+.name {
+  font-size: 0.85rem;
+  color: rgba(0, 255, 249, 0.6);
 }
 
 .stats {
@@ -170,12 +216,23 @@ onMounted(() => {
 }
 
 .contribution-graph {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
   padding: 10px;
   background: rgba(0, 255, 249, 0.02);
   border-radius: 4px;
+}
+
+.graph-title {
+  font-size: 0.65rem;
+  color: var(--cyber-magenta);
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-x: auto;
 }
 
 .grid-row {
@@ -186,8 +243,9 @@ onMounted(() => {
 .grid-cell {
   width: 10px;
   height: 10px;
+  min-width: 10px;
   border-radius: 2px;
-  animation: fadeIn 0.5s ease forwards;
+  animation: fadeIn 0.3s ease forwards;
   opacity: 0;
 }
 
